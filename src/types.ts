@@ -3,13 +3,23 @@ export interface Task {
     config_source: string;
     command: string;
     log: string;
-    messages: Array<string>;
-    parameters: Array<string>;
+    messages: string[];
+    parameters: string[];
     parent_success: boolean;
-    parents: [];
+    parents: string[];
     replay: number;
+    triggers: string[];
+    status: string; // Database field
+    time_stamp: string; // Database field
+}
+
+export interface TaskLogRecord {
+    id: number;
+    log: string;
+    name: string;
+    trigger: string;
+    command: string;
+    parameters: string;
     status: string;
-    triggers: Array<string>;
     time_stamp: string;
-    last_run_time: string;
 }

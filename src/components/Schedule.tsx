@@ -5,8 +5,66 @@ import TableCell from "@material-ui/core/TableCell";
 import TableContainer from "@material-ui/core/TableContainer";
 import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
+import Typography from "@material-ui/core/Typography";
+import Box from "@material-ui/core/Box";
 import { API } from "../constants";
 import { Task } from "../types";
+import { v4 as uuidv4 } from "uuid";
+import TaskNode from "./Task";
+
+interface StyledTableProps {
+    title: string;
+    columnNames: string[];
+    data: (string | React.ReactElement[])[][];
+}
+
+const StyledTable: React.FunctionComponent<StyledTableProps> = (
+    props: StyledTableProps,
+) => {
+    const tableHead: React.ReactElement = (
+        <TableRow>
+            {props.columnNames.map((columnName) => (
+                <TableCell key={columnName}>{columnName}</TableCell>
+            ))}
+        </TableRow>
+    );
+    //             {/* {row.map((cell) => (
+    //                 <TableCell key={uuidv4()}>{cell}</TableCell>
+    //             ))} */}
+
+    // return (
+    //     <TableRow key={uuidv4()}>
+    //         <TableCell>TEST</TableCell>
+    //     </TableRow>
+    // );
+
+    console.log(props.data);
+    Object.entries(props.data).map((row) => {
+        console.log(row);
+        // Object.entries(row).map(() => console.log(element));
+    });
+
+    return (
+        <Box
+            mb={1}
+            style={{
+                borderStyle: "solid",
+                borderWidth: 1,
+                borderColor: "grey",
+            }}
+        >
+            <Typography style={{ marginTop: 5, marginLeft: 5 }}>
+                {props.title}
+            </Typography>
+            <TableContainer>
+                <Table size="small">
+                    <TableHead>{tableHead}</TableHead>
+                    {/* <TableBody>{tableBody}</TableBody> */}
+                </Table>
+            </TableContainer>
+        </Box>
+    );
+};
 
 const Schedule: React.FunctionComponent = () => {
     const [scheduled, setScheduled] = React.useState([]);
@@ -45,62 +103,38 @@ const Schedule: React.FunctionComponent = () => {
         fetchRepeating();
     }, []);
 
-    const scheduledRows = Object.entries(scheduled).map(([time, tasks]) => {
-        const taskNames = Object.values(tasks)
-            .map((task) => {
-                return (task as Task).name;
-            })
-            .join(" ");
-
-        return (
-            <TableRow key={`time_row_${time}`}>
-                <TableCell>{time}</TableCell>
-                <TableCell>{taskNames}</TableCell>
-            </TableRow>
-        );
-    });
-
     const repeatingRows = Object.entries(repeating).map(([time, tasks]) => {
-        const taskNames = Object.values(tasks)
-            .map((task) => {
-                return (task as Task).name;
-            })
-            .join(" ");
+        const taskNodes = Object.values(tasks).map((task) => {
+            return <TaskNode key={(task as Task).name} task={task as Task} />;
+        });
 
-        return (
-            <TableRow key={`time_row_${time}`}>
-                <TableCell>{time}</TableCell>
-                <TableCell>{taskNames}</TableCell>
-            </TableRow>
-        );
+        return [time, taskNodes];
     });
+
+    // console.log(repeatingRows);
+
+    // const scheduledRows = Object.entries(scheduled).map(([time, tasks]) => {
+    //     const taskNames = Object.values(tasks)
+    //         .map((task) => {
+    //             return (task as Task).name;
+    //         })
+    //         .join(", ");
+
+    //     return [time, taskNames];
+    // });
 
     return (
         <>
-            Repeating Tasks
-            <TableContainer>
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>Interval (Minutes)</TableCell>
-                            <TableCell>Tasks</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>{repeatingRows}</TableBody>
-                </Table>
-            </TableContainer>
-            Scheduled Tasks
-            <TableContainer>
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>Time</TableCell>
-                            <TableCell>Tasks</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>{scheduledRows}</TableBody>
-                </Table>
-            </TableContainer>
+            <StyledTable
+                title="Repeating Tasks"
+                columnNames={["Interval (Minutes)", "Tasks"]}
+                data={repeating}
+            />
+            {/* <StyledTable
+                title="Scheduled Tasks"
+                columnNames={["Time", "Tasks"]}
+                data={scheduledRows}
+            /> */}
         </>
     );
 };
