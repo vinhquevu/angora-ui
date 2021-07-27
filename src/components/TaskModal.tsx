@@ -28,6 +28,7 @@ const TaskModal: React.FunctionComponent<TaskModalProps> = (
     const buttons = (
         <>
             <Link
+                style={{ textDecoration: "none" }}
                 to={{
                     pathname: "/workflow",
                     state: { taskName: task.name },
