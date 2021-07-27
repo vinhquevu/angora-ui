@@ -8,31 +8,35 @@ import { API } from "../constants";
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
-        root: { fontVariant: "small-caps" },
+        root: {
+            borderLeftColor: "black",
+            borderLeftStyle: "solid",
+            borderLeftWidth: 8,
+        },
         notrun: {
-            backgroundColor: theme.palette.grey[600],
-            color: theme.palette.getContrastText(theme.palette.grey[600]),
-            fontVariant: "small-caps",
+            borderLeftColor: theme.palette.grey[500],
+            borderLeftStyle: "solid",
+            borderLeftWidth: 8,
         },
         executed: {
-            backgroundColor: theme.palette.primary.main,
-            color: theme.palette.primary.contrastText,
-            fontVariant: "small-caps",
+            borderLeftColor: theme.palette.primary.main,
+            borderLeftStyle: "solid",
+            borderLeftWidth: 8,
         },
         success: {
-            backgroundColor: theme.palette.success.main,
-            color: theme.palette.success.contrastText,
-            fontVariant: "small-caps",
+            borderLeftColor: theme.palette.success.main,
+            borderLeftStyle: "solid",
+            borderLeftWidth: 8,
         },
         failed: {
-            backgroundColor: theme.palette.error.main,
-            color: theme.palette.error.contrastText,
-            fontVariant: "small-caps",
+            borderLeftColor: theme.palette.error.main,
+            borderLeftStyle: "solid",
+            borderLeftWidth: 8,
         },
         replayed: {
-            backgroundColor: theme.palette.warning.main,
-            color: theme.palette.warning.contrastText,
-            fontVariant: "small-caps",
+            borderLeftColor: theme.palette.warning.main,
+            borderLeftStyle: "solid",
+            borderLeftWidth: 8,
         },
     }),
 );
@@ -70,8 +74,8 @@ const StatusCard: React.FunctionComponent<StatusCardProps> = (
     return (
         <Card className={className}>
             <CardContent>
-                <Typography variant="h2">{taskCount}</Typography>
-                <Typography variant="h6">{props.title}</Typography>
+                <Typography>{props.title}</Typography>
+                <Typography>{taskCount}</Typography>
             </CardContent>
         </Card>
     );
