@@ -1,4 +1,5 @@
 import React from "react";
+import Box from "@material-ui/core/Box";
 import Table from "@material-ui/core/Table";
 import TableBody from "@material-ui/core/TableBody";
 import TableCell from "@material-ui/core/TableCell";
@@ -6,47 +7,49 @@ import TableContainer from "@material-ui/core/TableContainer";
 import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
 import Typography from "@material-ui/core/Typography";
-import Box from "@material-ui/core/Box";
+import { TaskGrid } from "./Tasks";
 import { API } from "../constants";
 import { Task } from "../types";
-import { v4 as uuidv4 } from "uuid";
-import TaskNode from "./Task";
+
+interface ScheduledRecords {
+    [key: string]: Task[];
+}
 
 interface StyledTableProps {
     title: string;
     columnNames: string[];
-    data: (string | React.ReactElement[])[][];
+    data: ScheduledRecords;
 }
 
 const StyledTable: React.FunctionComponent<StyledTableProps> = (
     props: StyledTableProps,
 ) => {
     const tableHead: React.ReactElement = (
-        <TableRow>
-            {props.columnNames.map((columnName) => (
-                <TableCell key={columnName}>{columnName}</TableCell>
-            ))}
-        </TableRow>
+        <TableHead>
+            <TableRow>
+                {props.columnNames.map((columnName) => (
+                    <TableCell key={columnName}>{columnName}</TableCell>
+                ))}
+            </TableRow>
+        </TableHead>
     );
-    //             {/* {row.map((cell) => (
-    //                 <TableCell key={uuidv4()}>{cell}</TableCell>
-    //             ))} */}
 
-    // return (
-    //     <TableRow key={uuidv4()}>
-    //         <TableCell>TEST</TableCell>
-    //     </TableRow>
-    // );
-
-    console.log(props.data);
-    Object.entries(props.data).map((row) => {
-        console.log(row);
-        // Object.entries(row).map(() => console.log(element));
-    });
+    const tableBody: React.ReactElement = (
+        <TableBody>
+            {Object.entries(props.data).map(([interval, tasks]) => (
+                <TableRow key={interval}>
+                    <TableCell>{interval}</TableCell>
+                    <TableCell>
+                        <TaskGrid tasks={tasks} />
+                    </TableCell>
+                </TableRow>
+            ))}
+        </TableBody>
+    );
 
     return (
         <Box
-            mb={1}
+            mb={2}
             style={{
                 borderStyle: "solid",
                 borderWidth: 1,
@@ -58,8 +61,8 @@ const StyledTable: React.FunctionComponent<StyledTableProps> = (
             </Typography>
             <TableContainer>
                 <Table size="small">
-                    <TableHead>{tableHead}</TableHead>
-                    {/* <TableBody>{tableBody}</TableBody> */}
+                    {tableHead}
+                    {tableBody}
                 </Table>
             </TableContainer>
         </Box>
@@ -67,8 +70,8 @@ const StyledTable: React.FunctionComponent<StyledTableProps> = (
 };
 
 const Schedule: React.FunctionComponent = () => {
-    const [scheduled, setScheduled] = React.useState([]);
-    const [repeating, setRepeating] = React.useState([]);
+    const [scheduled, setScheduled] = React.useState({} as ScheduledRecords);
+    const [repeating, setRepeating] = React.useState({} as ScheduledRecords);
 
     const fetchScheduled = async (): Promise<void> => {
         const url = `${API}/tasks/scheduled`;
@@ -103,26 +106,6 @@ const Schedule: React.FunctionComponent = () => {
         fetchRepeating();
     }, []);
 
-    const repeatingRows = Object.entries(repeating).map(([time, tasks]) => {
-        const taskNodes = Object.values(tasks).map((task) => {
-            return <TaskNode key={(task as Task).name} task={task as Task} />;
-        });
-
-        return [time, taskNodes];
-    });
-
-    // console.log(repeatingRows);
-
-    // const scheduledRows = Object.entries(scheduled).map(([time, tasks]) => {
-    //     const taskNames = Object.values(tasks)
-    //         .map((task) => {
-    //             return (task as Task).name;
-    //         })
-    //         .join(", ");
-
-    //     return [time, taskNames];
-    // });
-
     return (
         <>
             <StyledTable
@@ -130,11 +113,11 @@ const Schedule: React.FunctionComponent = () => {
                 columnNames={["Interval (Minutes)", "Tasks"]}
                 data={repeating}
             />
-            {/* <StyledTable
+            <StyledTable
                 title="Scheduled Tasks"
                 columnNames={["Time", "Tasks"]}
-                data={scheduledRows}
-            /> */}
+                data={scheduled}
+            />
         </>
     );
 };
