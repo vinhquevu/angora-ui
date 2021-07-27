@@ -20,6 +20,10 @@ import ReactFlow, {
 } from "react-flow-renderer";
 import { useLocation } from "react-router-dom";
 import { API } from "../constants";
+import { Task } from "../types";
+
+import TextField from "@material-ui/core/TextField";
+import Autocomplete from "@material-ui/lab/Autocomplete";
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -34,6 +38,52 @@ const useStyles = makeStyles((theme: Theme) =>
     }),
 );
 
+interface ComboBoxProps {
+    task: string;
+    onChange: (value: string) => void;
+}
+
+const ComboBox: React.FunctionComponent<ComboBoxProps> = (
+    props: ComboBoxProps,
+) => {
+    const [tasks, setTasks] = React.useState([]);
+
+    const fetchTasks = React.useCallback(async (): Promise<void> => {
+        const url = new URL(`${API}/tasks`);
+        const response = await fetch(url.toString());
+
+        if (response.ok) {
+            const body = await response.json();
+            const taskNames = body.data.map((task: Task) => task.name);
+            setTasks(taskNames.sort());
+        } else {
+            console.log(`Error: ${response.status}`);
+            console.log(`Error: ${response.statusText}`);
+            console.log("An error occurred while querying the tasks");
+            console.log(url.toString());
+        }
+    }, []);
+
+    React.useEffect(() => {
+        fetchTasks();
+    }, [fetchTasks]);
+
+    return (
+        <Autocomplete
+            id="combo-box-tasks"
+            options={tasks}
+            style={{ width: 300 }}
+            onChange={(event, value, reason) => {
+                if (value !== null) props.onChange(value);
+            }}
+            value={props.task}
+            renderInput={(params) => (
+                <TextField {...params} label="Task" variant="outlined" />
+            )}
+        />
+    );
+};
+
 interface stateType {
     taskName: string;
 }
@@ -42,12 +92,15 @@ const Workflow: React.FunctionComponent = () => {
     const classes = useStyles();
     const theme = useTheme();
     const { state } = useLocation<stateType>();
+
     const [children, setChildren] = React.useState([] as Elements);
     const [parents, setParents] = React.useState([] as Elements);
+    const [task, setTask] = React.useState(
+        state !== undefined ? state.taskName : "",
+    );
 
     const parseTaskData = React.useCallback(
         (data: { [key: string]: Array<string> }): Elements => {
-            console.log(data);
             return Object.entries(data).flatMap(([key, value]) => {
                 const retval = [] as Elements;
 
@@ -76,10 +129,12 @@ const Workflow: React.FunctionComponent = () => {
         [classes.base],
     );
 
-    const getLayoutedElements = (elements: Elements) => {
+    const getLayoutedElements = (elements: Elements, rankdir?: string) => {
         const dagreGraph = new dagre.graphlib.Graph();
         dagreGraph.setDefaultEdgeLabel(() => ({}));
-        dagreGraph.setGraph({ rankdir: "LR" });
+        dagreGraph.setGraph({
+            rankdir: rankdir === undefined ? "LR" : rankdir,
+        });
 
         elements.forEach((el) => {
             if (isNode(el)) {
@@ -111,7 +166,7 @@ const Workflow: React.FunctionComponent = () => {
 
     const fetchChildren = React.useCallback(async (): Promise<void> => {
         const url = new URL(`${API}/task/children`);
-        url.searchParams.append("name", state.taskName);
+        url.searchParams.append("name", task);
         const response = await fetch(url.toString());
 
         if (response.ok) {
@@ -123,66 +178,81 @@ const Workflow: React.FunctionComponent = () => {
             console.log("An error occurred while querying the task's workflow");
             console.log(url.toString());
         }
-    }, [state.taskName, parseTaskData]);
+    }, [task, parseTaskData]);
 
     const fetchParents = React.useCallback(async (): Promise<void> => {
         const url = new URL(`${API}/task/parents`);
-        url.searchParams.append("name", state.taskName);
+        url.searchParams.append("name", task);
         const response = await fetch(url.toString());
 
         if (response.ok) {
             const jsonResult = await response.json();
             const temp = parseTaskData(jsonResult["data"]);
-            setParents(getLayoutedElements(temp));
+            setParents(getLayoutedElements(temp, "RL"));
         } else {
             console.log(`Error: ${response.status}`);
             console.log("An error occurred while querying the task's workflow");
             console.log(url.toString());
         }
-    }, [state.taskName, parseTaskData]);
+    }, [task, parseTaskData]);
 
     React.useEffect(() => {
+        if (task === "") return;
+
         fetchChildren();
         fetchParents();
-    }, [fetchChildren, fetchParents]);
+    }, [fetchChildren, fetchParents, task]);
+
+    const handleTaskSelect = (taskName: string): void => {
+        setTask(taskName);
+    };
 
     return (
-        <div style={{ width: "100%" }}>
-            <Accordion square defaultExpanded={true}>
-                <AccordionSummary>Children</AccordionSummary>
-                <AccordionDetails>
-                    <Box
-                        style={{ height: "74vh", width: "100%" }}
-                        border={1}
-                        borderColor={theme.palette.divider}
-                    >
-                        <ReactFlowProvider>
-                            <ReactFlow elements={children} zoomOnScroll={false}>
-                                <Background />
-                                <Controls />
-                            </ReactFlow>
-                        </ReactFlowProvider>
-                    </Box>
-                </AccordionDetails>
-            </Accordion>
-            <Accordion square>
-                <AccordionSummary>Parents</AccordionSummary>
-                <AccordionDetails>
-                    <Box
-                        style={{ height: "74vh", width: "100%" }}
-                        border={1}
-                        borderColor={theme.palette.divider}
-                    >
-                        <ReactFlowProvider>
-                            <ReactFlow elements={parents} zoomOnScroll={false}>
-                                <Background />
-                                <Controls />
-                            </ReactFlow>
-                        </ReactFlowProvider>
-                    </Box>
-                </AccordionDetails>
-            </Accordion>
-        </div>
+        <>
+            <ComboBox onChange={handleTaskSelect} task={task} />
+            <div style={{ width: "100%" }}>
+                <Accordion square defaultExpanded={true}>
+                    <AccordionSummary>Children</AccordionSummary>
+                    <AccordionDetails>
+                        <Box
+                            style={{ height: "74vh", width: "100%" }}
+                            border={1}
+                            borderColor={theme.palette.divider}
+                        >
+                            <ReactFlowProvider>
+                                <ReactFlow
+                                    elements={children}
+                                    zoomOnScroll={false}
+                                >
+                                    <Background />
+                                    <Controls />
+                                </ReactFlow>
+                            </ReactFlowProvider>
+                        </Box>
+                    </AccordionDetails>
+                </Accordion>
+                <Accordion square>
+                    <AccordionSummary>Parents</AccordionSummary>
+                    <AccordionDetails>
+                        <Box
+                            style={{ height: "74vh", width: "100%" }}
+                            border={1}
+                            borderColor={theme.palette.divider}
+                        >
+                            <ReactFlowProvider>
+                                <ReactFlow
+                                    elements={parents}
+                                    zoomOnScroll={false}
+                                >
+                                    <Background />
+                                    <Controls />
+                                </ReactFlow>
+                            </ReactFlowProvider>
+                        </Box>
+                    </AccordionDetails>
+                </Accordion>
+            </div>
+        </>
     );
 };
 
