@@ -4,6 +4,30 @@ import { API } from "../constants";
 import { Task } from "../types";
 import TaskNode from "./Task";
 
+interface TaskGridProps {
+    tasks: Task[];
+}
+
+export const TaskGrid: React.FunctionComponent<TaskGridProps> = (
+    props: TaskGridProps,
+) => {
+    const elements = Object.entries(props.tasks).map(
+        ([index, task]): React.ReactNode => {
+            return (
+                <Grid item key={`grid_${task.name}`}>
+                    <TaskNode key={task.name} task={task} />
+                </Grid>
+            );
+        },
+    );
+
+    return (
+        <Grid container spacing={1} direction="row">
+            {elements}
+        </Grid>
+    );
+};
+
 const Tasks: React.FunctionComponent = () => {
     const [tasks, setTasks] = React.useState([] as Task[]);
 
@@ -26,21 +50,7 @@ const Tasks: React.FunctionComponent = () => {
         fetchTasks();
     }, [fetchTasks]);
 
-    const elements = Object.entries(tasks).map(
-        ([index, task]): React.ReactNode => {
-            return (
-                <Grid item key={`grid_${task.name}`}>
-                    <TaskNode key={task.name} task={task} />
-                </Grid>
-            );
-        },
-    );
-
-    return (
-        <Grid container spacing={1} direction="row">
-            {elements}
-        </Grid>
-    );
+    return <TaskGrid tasks={tasks} />;
 };
 
 export default Tasks;
