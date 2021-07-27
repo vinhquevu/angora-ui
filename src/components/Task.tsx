@@ -14,7 +14,7 @@ const useStyles = makeStyles((theme: Theme) =>
             padding: theme.spacing(1),
             borderRadius: theme.shape.borderRadius,
             minWidth: "150px",
-            width: "auto",
+            width: "fit-content",
             fontSize: theme.typography.fontSize,
             color: theme.palette.text.primary,
             textAlign: "center",
@@ -106,16 +106,16 @@ class TaskNode extends React.Component<TaskNodeProps, TaskNodeState> {
         };
     }
 
-    handleWorkflowClick = () => {
+    handleWorkflowClick = (): void => {
         console.log("workflow click");
     };
-    handleHistoryClick = () => {
+    handleHistoryClick = (): void => {
         this.setState({ taskModalShow: false, historyModalShow: true });
     };
-    handleLogClick = () => {
+    handleLogClick = (): void => {
         this.setState({ taskModalShow: false, logModalShow: true });
     };
-    handleExecuteClick = () => {
+    handleExecuteClick = (): void => {
         this.setState({ taskModalShow: false, executeModalShow: true });
     };
 
@@ -146,7 +146,7 @@ class TaskNode extends React.Component<TaskNodeProps, TaskNodeState> {
         }
     };
 
-    handleSubmit = (trigger: string, parameters: string[]) => {
+    handleSubmit = (trigger: string, parameters: string[]): void => {
         this.setState({
             executeModalShow: false,
         });
