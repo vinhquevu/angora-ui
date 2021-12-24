@@ -52,9 +52,7 @@ const StatusCard: React.FunctionComponent<StatusCardProps> = (
 ) => {
     const classes = useStyles();
     const [taskCount, setTaskCount] = React.useState(0);
-    const [className, setClassName] = React.useState<string | undefined>(
-        undefined,
-    );
+    const [className, setClassName] = React.useState<string>();
 
     const fetchTasksToday = React.useCallback(async (): Promise<void> => {
         const url = new URL(`${API}/tasks/today/${props.status}`);

@@ -7,7 +7,7 @@ import TableContainer from "@material-ui/core/TableContainer";
 import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
 import Typography from "@material-ui/core/Typography";
-import { TaskGrid } from "./Tasks";
+import { TaskGrid } from "./Task";
 import { API } from "../constants";
 import { Task } from "../types";
 
@@ -70,10 +70,10 @@ const StyledTable: React.FunctionComponent<StyledTableProps> = (
 };
 
 const Schedule: React.FunctionComponent = () => {
-    const [scheduled, setScheduled] = React.useState({} as ScheduledRecords);
-    const [repeating, setRepeating] = React.useState({} as ScheduledRecords);
+    const [scheduled, setScheduled] = React.useState<ScheduledRecords>({});
+    const [repeating, setRepeating] = React.useState<ScheduledRecords>({});
 
-    const fetchScheduled = async (): Promise<void> => {
+    const fetchScheduled = React.useCallback(async (): Promise<void> => {
         const url = `${API}/tasks/scheduled`;
         const response = await fetch(url);
 
@@ -81,13 +81,13 @@ const Schedule: React.FunctionComponent = () => {
             const jsonResult = await response.json();
             setScheduled(jsonResult["data"]);
         } else {
-            console.log(`Error: ${response.status}`);
-            console.log("An error occurred while querying scheduled tasks");
-            console.log(url);
+            console.error(`Error: ${response.status}`);
+            console.error(url);
+            alert("An error occurred while querying scheduled tasks");
         }
-    };
+    }, []);
 
-    const fetchRepeating = async (): Promise<void> => {
+    const fetchRepeating = React.useCallback(async (): Promise<void> => {
         const url = `${API}/tasks/repeating`;
         const response = await fetch(url);
 
@@ -95,16 +95,16 @@ const Schedule: React.FunctionComponent = () => {
             const jsonResult = await response.json();
             setRepeating(jsonResult["data"]);
         } else {
-            console.log(`Error: ${response.status}`);
-            console.log("An error occurred while querying repeating tasks");
-            console.log(url);
+            console.error(`Error: ${response.status}`);
+            console.error(url);
+            alert("An error occurred while querying repeating tasks");
         }
-    };
+    }, []);
 
     React.useEffect(() => {
         fetchScheduled();
         fetchRepeating();
-    }, []);
+    }, [fetchScheduled, fetchRepeating]);
 
     return (
         <>

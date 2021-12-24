@@ -24,17 +24,16 @@ interface TaskModalProps {
 const TaskModal: React.FunctionComponent<TaskModalProps> = (
     props: TaskModalProps,
 ) => {
-    const [task] = React.useState(props.task);
     const buttons = (
         <>
             <Link
                 style={{ textDecoration: "none" }}
                 to={{
                     pathname: "/workflow",
-                    state: { taskName: task.name },
+                    state: { taskName: props.task.name },
                 }}
             >
-                <Button onClick={props.onClose}>Workflow</Button>
+                <Button onClick={props.onWorkflowClick}>Workflow</Button>
             </Link>
             <Button onClick={props.onHistoryClick}>History</Button>
             <Button onClick={props.onLogClick}>Log</Button>
@@ -44,7 +43,7 @@ const TaskModal: React.FunctionComponent<TaskModalProps> = (
 
     return (
         <BaseModal
-            title={task.name}
+            title={props.task.name}
             open={props.open}
             buttons={buttons}
             onClose={props.onClose}
@@ -54,37 +53,37 @@ const TaskModal: React.FunctionComponent<TaskModalProps> = (
                     <TableBody>
                         <TableRow>
                             <TableCell>Command</TableCell>
-                            <TableCell>{task.command}</TableCell>
+                            <TableCell>{props.task.command}</TableCell>
                         </TableRow>
                         <TableRow>
                             <TableCell>Triggers</TableCell>
                             <TableCell>
-                                {(task.triggers ?? []).map((trigger) => {
+                                {(props.task.triggers ?? []).map((trigger) => {
                                     return <div key={trigger}>{trigger}</div>;
                                 })}
                             </TableCell>
                         </TableRow>
                         <TableRow>
                             <TableCell>Log</TableCell>
-                            <TableCell>{task.log}</TableCell>
+                            <TableCell>{props.task.log}</TableCell>
                         </TableRow>
                         <TableRow>
                             <TableCell>Replay Count</TableCell>
                             <TableCell>
-                                {task.replay === null
+                                {props.task.replay === null
                                     ? "Infinite"
-                                    : task.replay}
+                                    : props.task.replay}
                             </TableCell>
                         </TableRow>
                         <TableRow>
                             <TableCell>Parent Success</TableCell>
                             <TableCell>
-                                {task.parent_success ? "True" : "False"}
+                                {props.task.parent_success ? "True" : "False"}
                             </TableCell>
                         </TableRow>
                         <TableRow>
                             <TableCell>Last Run Time</TableCell>
-                            <TableCell>{task.time_stamp}</TableCell>
+                            <TableCell>{props.task.time_stamp}</TableCell>
                         </TableRow>
                     </TableBody>
                 </Table>

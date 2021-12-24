@@ -11,15 +11,15 @@ import BaseModal from "./BaseModal";
 import dayjs from "dayjs";
 
 interface HistoryProps {
-    open: boolean;
     taskName: string;
+    open: boolean;
     onClose: () => void;
 }
 
 const HistoryModal: React.FunctionComponent<HistoryProps> = (
     props: HistoryProps,
 ) => {
-    const [history, setHistory] = React.useState([] as TaskLogRecord[]);
+    const [history, setHistory] = React.useState<TaskLogRecord[]>();
 
     const fetchHistory = React.useCallback(async (): Promise<void> => {
         const today = dayjs().format("YYYY-MM-DD").toString();
@@ -39,10 +39,12 @@ const HistoryModal: React.FunctionComponent<HistoryProps> = (
     }, [props.taskName]);
 
     React.useEffect(() => {
-        fetchHistory();
-    }, [fetchHistory]);
+        if (props.taskName === undefined) return;
 
-    const rows = history.map((data: TaskLogRecord) => {
+        fetchHistory();
+    }, [props.taskName, fetchHistory]);
+
+    const rows = history?.map((data: TaskLogRecord) => {
         return (
             <TableRow key={data.id}>
                 <TableCell>{data.time_stamp}</TableCell>

@@ -1,38 +1,13 @@
 import React from "react";
-import Grid from "@material-ui/core/Grid";
+import { TaskGrid } from "./Task";
 import { API } from "../constants";
 import { Task } from "../types";
-import TaskNode from "./Task";
-
-interface TaskGridProps {
-    tasks: Task[];
-}
-
-export const TaskGrid: React.FunctionComponent<TaskGridProps> = (
-    props: TaskGridProps,
-) => {
-    const elements = Object.entries(props.tasks).map(
-        ([index, task]): React.ReactNode => {
-            return (
-                <Grid item key={`grid_${task.name}`}>
-                    <TaskNode key={task.name} task={task} />
-                </Grid>
-            );
-        },
-    );
-
-    return (
-        <Grid container spacing={1} direction="row">
-            {elements}
-        </Grid>
-    );
-};
 
 const Tasks: React.FunctionComponent = () => {
-    const [tasks, setTasks] = React.useState([] as Task[]);
+    const [tasks, setTasks] = React.useState<Task[]>([]);
 
     const fetchTasks = React.useCallback(async (): Promise<void> => {
-        const url = new URL(`${API}/tasks`);
+        const url = new URL(`${API}/tasks/lastruntime`);
         const response = await fetch(url.toString());
 
         if (response.ok) {

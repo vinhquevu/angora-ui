@@ -1,12 +1,13 @@
 import React from "react";
 import clsx from "clsx";
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles";
-import ExecuteModal from "./ExecuteModal";
-import HistoryModal from "./HistoryModal";
-import LogModal from "./LogModal";
-import TaskModal from "./TaskModal";
 import { API } from "../constants";
 import { Task } from "../types";
+import Grid from "@material-ui/core/Grid";
+import TaskModal from "./TaskModal";
+import HistoryModal from "./HistoryModal";
+import LogModal from "./LogModal";
+import ExecuteModal from "./ExecuteModal";
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -44,82 +45,72 @@ const TaskCard: React.FunctionComponent<TaskCardProps> = (
     props: TaskCardProps,
 ) => {
     const classes = useStyles();
-    const [task, setTask] = React.useState(props.task);
 
-    const fetchTask = React.useCallback(async (): Promise<void> => {
-        const url = new URL(`${API}/tasks/lastruntime`);
-        url.searchParams.append("name", props.task.name);
+    // const fetchTask = async (taskName: string): Promise<Task> => {
+    //     const url = new URL(`${API}/tasks/lastruntime`);
+    //     url.searchParams.append("name", taskName);
 
-        const response = await fetch(url.toString());
-        if (response.ok) {
-            const body = await response.json();
-            setTask(body.data[0]);
-        } else {
-            console.log("Error fetching task data");
-            console.log(response.status);
-            console.log(url.toString());
-        }
-    }, [props.task]);
+    //     const response = await fetch(url.toString());
+    //     if (!response.ok) {
+    //         console.error(response.status);
+    //         console.error(url.toString());
+    //         throw Error("Error fetching task data");
+    //     }
 
-    React.useEffect(() => {
-        fetchTask();
-    }, [fetchTask]);
+    //     const body = await response.json();
+    //     return body.data[0];
+    // };
 
     return (
         <div
             className={clsx(classes.node, {
-                [classes.success]: task.status === "success",
-                [classes.fail]: task.status === "fail",
-                [classes.start]: task.status === "start",
+                [classes.success]: props.task.status === "success",
+                [classes.fail]: props.task.status === "fail",
+                [classes.start]: props.task.status === "start",
             })}
             onClick={props.onClick}
         >
-            {task.name ?? "Loading . . ."}
+            {props.task.name ?? "Loading . . ."}
             <br />
-            {task.time_stamp}
+            {props.task.time_stamp}
         </div>
     );
 };
 
-interface TaskNodeProps {
+interface TaskControlProps {
     task: Task;
+    show: boolean;
+    onClose: () => void;
 }
 
-interface TaskNodeState {
-    task: Task;
-    historyModalShow: boolean;
-    logModalShow: boolean;
-    executeModalShow: boolean;
-    taskModalShow: boolean;
-}
+const TaskControl: React.FunctionComponent<TaskControlProps> = ({
+    task,
+    show,
+    onClose,
+}: TaskControlProps) => {
+    const [taskModalShow, setTaskModalShow] = React.useState(show);
+    const [historyModalShow, setHistoryModalShow] = React.useState(false);
+    const [logModalShow, setLogModalShow] = React.useState(false);
+    const [executeModalShow, setExecuteModalShow] = React.useState(false);
 
-class TaskNode extends React.Component<TaskNodeProps, TaskNodeState> {
-    constructor(props: TaskNodeProps) {
-        super(props);
+    React.useEffect(() => {
+        setTaskModalShow(show);
+    }, [show]);
 
-        this.state = {
-            task: this.props.task,
-            historyModalShow: false,
-            logModalShow: false,
-            executeModalShow: false,
-            taskModalShow: false,
-        };
-    }
-
-    handleWorkflowClick = (): void => {
-        console.log("workflow click");
+    const handleHistoryClick = () => {
+        onClose();
+        setHistoryModalShow(true);
     };
-    handleHistoryClick = (): void => {
-        this.setState({ taskModalShow: false, historyModalShow: true });
+    const handleLogClick = (): void => {
+        onClose();
+        setLogModalShow(true);
     };
-    handleLogClick = (): void => {
-        this.setState({ taskModalShow: false, logModalShow: true });
-    };
-    handleExecuteClick = (): void => {
-        this.setState({ taskModalShow: false, executeModalShow: true });
+    const handleExecuteClick = (): void => {
+        onClose();
+        setExecuteModalShow(true);
     };
 
-    handleExecute = async (
+    const handleExecute = async (
         trigger: string,
         parameters: string[],
     ): Promise<void> => {
@@ -134,63 +125,100 @@ class TaskNode extends React.Component<TaskNodeProps, TaskNodeState> {
         const response = await fetch(url.toString());
 
         if (!response.ok) {
-            console.log(url.toString());
-            throw new Error("Error accessing API");
+            console.error(url.toString());
+            alert("Error accessing API");
+            return;
         }
 
         const body = await response.json();
 
         if (body.status === "error") {
-            console.log(url.toString());
-            throw new Error("Error executing task");
+            console.error(url.toString());
+            alert("Error executing task");
         }
     };
 
-    handleSubmit = (trigger: string, parameters: string[]): void => {
-        this.setState({
-            executeModalShow: false,
-        });
-        this.handleExecute(trigger, parameters).catch((error) =>
-            console.log(error),
-        );
+    const handleSubmit = (trigger: string, parameters: string[]): void => {
+        setExecuteModalShow(false);
+        handleExecute(trigger, parameters);
     };
 
-    render(): React.ReactNode {
-        return (
-            <>
-                <TaskCard
-                    task={this.state.task}
-                    onClick={() => this.setState({ taskModalShow: true })}
-                />
-                <TaskModal
-                    open={this.state.taskModalShow}
-                    task={this.state.task}
-                    onClose={() => this.setState({ taskModalShow: false })}
-                    onWorkflowClick={this.handleWorkflowClick}
-                    onHistoryClick={this.handleHistoryClick}
-                    onLogClick={this.handleLogClick}
-                    onExecuteClick={this.handleExecuteClick}
-                />
-                <HistoryModal
-                    open={this.state.historyModalShow}
-                    taskName={this.state.task.name}
-                    onClose={() => this.setState({ historyModalShow: false })}
-                />
-                <LogModal
-                    key={`log_${this.state.task.time_stamp}`}
-                    open={this.state.logModalShow}
-                    task={this.state.task}
-                    onClose={() => this.setState({ logModalShow: false })}
-                />
-                <ExecuteModal
-                    open={this.state.executeModalShow}
-                    task={this.state.task}
-                    onClose={() => this.setState({ executeModalShow: false })}
-                    onSubmit={this.handleSubmit}
-                />
-            </>
-        );
-    }
+    return (
+        <>
+            <TaskModal
+                open={taskModalShow}
+                task={task}
+                onClose={onClose}
+                onWorkflowClick={onClose}
+                onHistoryClick={handleHistoryClick}
+                onLogClick={handleLogClick}
+                onExecuteClick={handleExecuteClick}
+            />
+            <HistoryModal
+                open={historyModalShow}
+                taskName={task.name}
+                onClose={() => setHistoryModalShow(false)}
+            />
+            <LogModal
+                // key={`log_${task.time_stamp}`}
+                open={logModalShow}
+                taskName={task.name}
+                onClose={() => setLogModalShow(false)}
+            />
+            <ExecuteModal
+                open={executeModalShow}
+                task={task}
+                onClose={() => setExecuteModalShow(false)}
+                onSubmit={handleSubmit}
+            />
+        </>
+    );
+};
+
+interface TaskGridProps {
+    tasks: Task[];
 }
 
-export default TaskNode;
+const TaskGrid: React.FunctionComponent<TaskGridProps> = (
+    props: TaskGridProps,
+) => {
+    const [task, setTask] = React.useState<Task>({} as Task);
+    const [taskControlShow, setTaskControlShow] = React.useState(false);
+
+    const handleTaskClick = (task: Task) => {
+        console.log("click");
+        setTask(task);
+        setTaskControlShow(true);
+    };
+
+    const handleTaskControlClose = () => setTaskControlShow(false);
+
+    const elements = Object.entries(props.tasks).map(
+        ([index, task]): React.ReactNode => {
+            return (
+                <Grid item key={`grid_${task.name}`}>
+                    <TaskCard
+                        key={task.name}
+                        task={task}
+                        onClick={() => handleTaskClick(task)}
+                    />
+                </Grid>
+            );
+        },
+    );
+
+    return (
+        <>
+            <Grid container spacing={1} direction="row">
+                {elements}
+            </Grid>
+            <TaskControl
+                task={task}
+                show={taskControlShow}
+                onClose={handleTaskControlClose}
+            />
+        </>
+    );
+};
+
+export { TaskGrid, TaskControl };

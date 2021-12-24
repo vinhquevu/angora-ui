@@ -22,3 +22,5 @@ TODO
 -   fix connection points
 -   Task Editor page
 -   Create workflows in interface
+-   Nail down styling
+-   Add more basic widgets

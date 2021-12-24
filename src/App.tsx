@@ -52,8 +52,6 @@ const useStyles = makeStyles((theme: Theme) =>
 
 const App: React.FunctionComponent = () => {
     const classes = useStyles();
-    // const theme = useTheme();
-
     const [title, setTitle] = React.useState("Dashboard");
 
     return (
@@ -127,10 +125,7 @@ const App: React.FunctionComponent = () => {
                             <Route path="/schedule" component={Schedule} />
                             <Route path="/history" component={History} />
                             <Route path="/log" component={Log} />
-                            <Route
-                                path="/workflow"
-                                render={(props) => <Workflow /*{...props}*/ />}
-                            />
+                            <Route path="/workflow" component={Workflow} />
                         </Container>
                     </>
                 </Switch>

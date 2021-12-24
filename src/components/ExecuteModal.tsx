@@ -22,7 +22,11 @@ const ExecuteModal: React.FunctionComponent<ExecuteModalProps> = (
     const [trigger, setTrigger] = React.useState(
         (props.task.triggers ?? [""])[0],
     );
-    const [parameters, setParameters] = React.useState([] as Array<string>);
+    const [parameters, setParameters] = React.useState<string[]>([]);
+
+    React.useEffect(() => {
+        if (props.task.triggers) setTrigger(props.task.triggers[0]);
+    }, [props.task.triggers]);
 
     const handleTriggerChange = (
         event: React.ChangeEvent<{ value: unknown }>,
@@ -64,7 +68,7 @@ const ExecuteModal: React.FunctionComponent<ExecuteModalProps> = (
             <Grid
                 container
                 direction="column"
-                justify="flex-start"
+                justifyContent="flex-start"
                 alignItems="stretch"
                 spacing={2}
             >
