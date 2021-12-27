@@ -14,10 +14,9 @@ const Tasks: React.FunctionComponent = () => {
             const body = await response.json();
             setTasks(body.data);
         } else {
-            console.log(`Error: ${response.status}`);
-            console.log(`Error: ${response.statusText}`);
-            console.log("An error occurred while querying the tasks");
-            console.log(url.toString());
+            console.error(`Error: ${response.status}`);
+            console.error(url.toString());
+            alert("An error occurred while querying the tasks");
         }
     }, []);
 
