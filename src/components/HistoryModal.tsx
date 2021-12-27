@@ -32,9 +32,9 @@ const HistoryModal: React.FunctionComponent<HistoryProps> = (
             const body = await response.json();
             setHistory(body.data);
         } else {
-            console.log(`Error: ${response.status}`);
-            console.log("An error occurred while querying the task's history");
-            console.log(url.toString());
+            console.error(`Error: ${response.status}`);
+            console.error(url.toString());
+            alert("An error occurred while querying the task's history");
         }
     }, [props.taskName]);
 
