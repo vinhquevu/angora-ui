@@ -2,7 +2,6 @@
 
 import React from "react";
 import Button from "@material-ui/core/Button";
-import { Link } from "react-router-dom";
 import BaseModal from "./BaseModal";
 import { Task } from "../types";
 import Table from "@material-ui/core/Table";
@@ -26,15 +25,7 @@ const TaskModal: React.FunctionComponent<TaskModalProps> = (
 ) => {
     const buttons = (
         <>
-            <Link
-                style={{ textDecoration: "none" }}
-                to={{
-                    pathname: "/workflow",
-                    state: { taskName: props.task.name },
-                }}
-            >
-                <Button onClick={props.onWorkflowClick}>Workflow</Button>
-            </Link>
+            <Button onClick={props.onWorkflowClick}>Workflow</Button>
             <Button onClick={props.onHistoryClick}>History</Button>
             <Button onClick={props.onLogClick}>Log</Button>
             <Button onClick={props.onExecuteClick}>Execute</Button>
