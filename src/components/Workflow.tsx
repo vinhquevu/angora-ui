@@ -1,8 +1,5 @@
 import React from "react";
 import clsx from "clsx";
-import Accordion from "@material-ui/core/Accordion";
-import AccordionDetails from "@material-ui/core/AccordionDetails";
-import AccordionSummary from "@material-ui/core/AccordionSummary";
 import Box from "@material-ui/core/Box";
 import {
     createStyles,
@@ -50,6 +47,11 @@ const useStyles = makeStyles((theme: Theme) =>
         fail: {
             backgroundColor: theme.palette.error.main,
         },
+        root: {
+            borderWidth: 2,
+            borderColor: theme.palette.primary.dark,
+            fontWeight: theme.typography.fontWeightBold,
+        },
     }),
 );
 
@@ -73,14 +75,12 @@ const ComboBox: React.FunctionComponent<ComboBoxProps> = (
             setTasks(taskNames.sort());
         } else {
             console.error(`Error: ${response.status}`);
-            console.error(`Error: ${response.statusText}`);
             console.error(url.toString());
             alert("An error occurred while querying the tasks");
         }
     }, []);
 
     React.useEffect(() => {
-        console.log(props.value);
         fetchTasks();
     }, [fetchTasks, props.value]);
 
@@ -100,10 +100,11 @@ const ComboBox: React.FunctionComponent<ComboBoxProps> = (
     );
 };
 
-interface Child {
+interface TaskData {
     status: string;
     time_stamp: string;
     children: string[];
+    parents: string[];
 }
 
 interface stateType {
@@ -138,13 +139,14 @@ const Workflow: React.FunctionComponent = () => {
     const { state } = useLocation<stateType>();
 
     const [root, setRoot] = React.useState(state?.taskName ?? "");
-    const [children, setChildren] = React.useState<Elements>([]);
+    const [family, setFamily] = React.useState<Elements>([]);
+    // const [children, setChildren] = React.useState<Elements>([]);
     // const [parents, setParents] = React.useState<Elements>([]);
     const [task, setTask] = React.useState<Task>({} as Task);
     const [showTaskControl, setShowTaskControl] = React.useState(false);
 
     const parseTaskData = React.useCallback(
-        (data: { [key: string]: Child }): Elements => {
+        (data: { [key: string]: TaskData }): Elements => {
             // flatMap is like calling map() and then calling flat(). Use
             // flatMap to flatten retval, which is an array, so that you have a
             // 1 dimenstional array instead of an array of arrays.  This just
@@ -165,24 +167,40 @@ const Workflow: React.FunctionComponent = () => {
                         [classes.success]: value.status === "success",
                         [classes.fail]: value.status === "fail",
                         [classes.start]: value.status === "start",
+                        [classes.root]: key === root,
                     }),
                 });
 
-                // Edges
-                retval.push(
-                    ...value.children.map((current) => {
-                        return {
-                            id: `edge_${key}_${current}`,
-                            source: key,
-                            target: current,
-                        };
-                    }),
-                );
+                // Edges (children)
+                if (value.children !== undefined) {
+                    retval.push(
+                        ...value.children.map((current) => {
+                            return {
+                                id: `edge_${key}_${current}`,
+                                source: key,
+                                target: current,
+                            };
+                        }),
+                    );
+                }
+
+                // Edges (parents)
+                if (value.parents !== undefined) {
+                    retval.push(
+                        ...value.parents.map((current) => {
+                            return {
+                                id: `edge_${current}_${key}`,
+                                source: current,
+                                target: key,
+                            };
+                        }),
+                    );
+                }
 
                 return retval;
             });
         },
-        [classes.base, classes.success, classes.fail, classes.start],
+        [classes, root],
     );
 
     const getLaidOutElements = (elements: Elements, rankdir?: string) => {
@@ -238,17 +256,17 @@ const Workflow: React.FunctionComponent = () => {
         [],
     );
 
-    const fetchChildren = React.useCallback(async (): Promise<void> => {
+    const fetchFamily = React.useCallback(async (): Promise<void> => {
         if (root === "") return;
 
-        const url = new URL(`${API}/task/children/lastruntime`);
+        const url = new URL(`${API}/task/family/lastruntime`);
         url.searchParams.append("name", root);
         const response = await fetch(url.toString());
 
         if (response.ok) {
             const jsonResult = await response.json();
             const temp = parseTaskData(jsonResult["data"]);
-            setChildren(getLaidOutElements(temp));
+            setFamily(getLaidOutElements(temp));
         } else {
             console.error(`Error: ${response.status}`);
             console.error(
@@ -257,6 +275,26 @@ const Workflow: React.FunctionComponent = () => {
             console.error(url.toString());
         }
     }, [root, parseTaskData]);
+
+    // const fetchChildren = React.useCallback(async (): Promise<void> => {
+    //     if (root === "") return;
+
+    //     const url = new URL(`${API}/task/children/lastruntime`);
+    //     url.searchParams.append("name", root);
+    //     const response = await fetch(url.toString());
+
+    //     if (response.ok) {
+    //         const jsonResult = await response.json();
+    //         const temp = parseTaskData(jsonResult["data"]);
+    //         setChildren(getLaidOutElements(temp));
+    //     } else {
+    //         console.error(`Error: ${response.status}`);
+    //         console.error(
+    //             "An error occurred while querying the task's workflow",
+    //         );
+    //         console.error(url.toString());
+    //     }
+    // }, [root, parseTaskData]);
 
     // const fetchParents = React.useCallback(async (): Promise<void> => {
     //     if (root === "") return;
@@ -281,14 +319,10 @@ const Workflow: React.FunctionComponent = () => {
     React.useEffect(() => {
         if (root === "") return;
 
-        fetchChildren();
+        fetchFamily();
+        // fetchChildren();
         // fetchParents();
-    }, [fetchChildren, root]);
-
-    const handleTaskSelect = (taskName: string): void => {
-        setRoot(taskName);
-        // fetchTask(taskName);
-    };
+    }, [fetchFamily, root]);
 
     const handleElementClick = (
         event: React.MouseEvent,
@@ -297,62 +331,35 @@ const Workflow: React.FunctionComponent = () => {
         fetchTask(element.id).then(() => setShowTaskControl(true));
     };
 
-    const handleTaskControlClose = () => setShowTaskControl(false);
-
     return (
         <>
-            <ComboBox onChange={handleTaskSelect} value={root} />
-            <div style={{ width: "100%" }}>
-                <Accordion square defaultExpanded={true}>
-                    <AccordionSummary>Children</AccordionSummary>
-                    <AccordionDetails>
-                        <Box
-                            style={{ height: "74vh", width: "100%" }}
-                            border={1}
-                            borderColor={theme.palette.divider}
-                        >
-                            <ReactFlowProvider>
-                                <ReactFlow
-                                    elements={children}
-                                    zoomOnScroll={false}
-                                    onElementClick={handleElementClick}
-                                    nodesDraggable={false}
-                                    nodeTypes={{
-                                        default: CustomNode,
-                                    }}
-                                >
-                                    <Background />
-                                    <Controls />
-                                </ReactFlow>
-                            </ReactFlowProvider>
-                        </Box>
-                    </AccordionDetails>
-                </Accordion>
-                {/* <Accordion square>
-                    <AccordionSummary>Parents</AccordionSummary>
-                    <AccordionDetails>
-                        <Box
-                            style={{ height: "74vh", width: "100%" }}
-                            border={1}
-                            borderColor={theme.palette.divider}
-                        >
-                            <ReactFlowProvider>
-                                <ReactFlow
-                                    elements={parents}
-                                    zoomOnScroll={false}
-                                >
-                                    <Background />
-                                    <Controls />
-                                </ReactFlow>
-                            </ReactFlowProvider>
-                        </Box>
-                    </AccordionDetails>
-                </Accordion> */}
-            </div>
+            <ComboBox onChange={(taskName) => setRoot(taskName)} value={root} />
+            <Box
+                style={{ height: "78vh", width: "100%" }}
+                border={1}
+                borderColor={theme.palette.divider}
+                mt={1}
+            >
+                <ReactFlowProvider>
+                    <ReactFlow
+                        elements={family}
+                        zoomOnScroll={false}
+                        onElementClick={handleElementClick}
+                        nodesDraggable={false}
+                        nodeTypes={{
+                            default: CustomNode,
+                        }}
+                    >
+                        <Background />
+                        <Controls />
+                    </ReactFlow>
+                </ReactFlowProvider>
+            </Box>
             <TaskControl
                 task={task}
                 show={showTaskControl}
-                onClose={handleTaskControlClose}
+                onClose={() => setShowTaskControl(false)}
+                onWorkflowClick={() => setRoot(task.name)}
             />
         </>
     );
