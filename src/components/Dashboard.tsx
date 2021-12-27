@@ -58,9 +58,14 @@ const StatusCard: React.FunctionComponent<StatusCardProps> = (
         const url = new URL(`${API}/tasks/today/${props.status}`);
         const response = await fetch(url.toString());
 
-        if (!response.ok) console.log(`Error: ${response.status}`);
-        const jsonResult = await response.json();
-        setTaskCount(jsonResult["data"].length);
+        if (response.ok) {
+            const jsonResult = await response.json();
+            setTaskCount(jsonResult["data"].length);
+        } else {
+            console.error(`Error: ${response.status}`);
+            console.error(url.toString());
+            alert("An error occurred while querying the task data");
+        }
     }, [props.status]);
 
     React.useEffect(() => {
