@@ -8,6 +8,7 @@ import TaskModal from "./TaskModal";
 import HistoryModal from "./HistoryModal";
 import LogModal from "./LogModal";
 import ExecuteModal from "./ExecuteModal";
+import { useHistory } from "react-router-dom";
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -46,21 +47,6 @@ const TaskCard: React.FunctionComponent<TaskCardProps> = (
 ) => {
     const classes = useStyles();
 
-    // const fetchTask = async (taskName: string): Promise<Task> => {
-    //     const url = new URL(`${API}/tasks/lastruntime`);
-    //     url.searchParams.append("name", taskName);
-
-    //     const response = await fetch(url.toString());
-    //     if (!response.ok) {
-    //         console.error(response.status);
-    //         console.error(url.toString());
-    //         throw Error("Error fetching task data");
-    //     }
-
-    //     const body = await response.json();
-    //     return body.data[0];
-    // };
-
     return (
         <div
             className={clsx(classes.node, {
@@ -81,32 +67,36 @@ interface TaskControlProps {
     task: Task;
     show: boolean;
     onClose: () => void;
+    onWorkflowClick: () => void;
 }
 
-const TaskControl: React.FunctionComponent<TaskControlProps> = ({
-    task,
-    show,
-    onClose,
-}: TaskControlProps) => {
-    const [taskModalShow, setTaskModalShow] = React.useState(show);
+const TaskControl: React.FunctionComponent<TaskControlProps> = (
+    props: TaskControlProps,
+) => {
+    const [taskModalShow, setTaskModalShow] = React.useState(props.show);
     const [historyModalShow, setHistoryModalShow] = React.useState(false);
     const [logModalShow, setLogModalShow] = React.useState(false);
     const [executeModalShow, setExecuteModalShow] = React.useState(false);
 
     React.useEffect(() => {
-        setTaskModalShow(show);
-    }, [show]);
+        setTaskModalShow(props.show);
+    }, [props.show]);
+
+    const handleWorkflowClick = () => {
+        props.onClose();
+        props.onWorkflowClick();
+    };
 
     const handleHistoryClick = () => {
-        onClose();
+        props.onClose();
         setHistoryModalShow(true);
     };
     const handleLogClick = (): void => {
-        onClose();
+        props.onClose();
         setLogModalShow(true);
     };
     const handleExecuteClick = (): void => {
-        onClose();
+        props.onClose();
         setExecuteModalShow(true);
     };
 
@@ -147,27 +137,26 @@ const TaskControl: React.FunctionComponent<TaskControlProps> = ({
         <>
             <TaskModal
                 open={taskModalShow}
-                task={task}
-                onClose={onClose}
-                onWorkflowClick={onClose}
+                task={props.task}
+                onClose={props.onClose}
+                onWorkflowClick={handleWorkflowClick}
                 onHistoryClick={handleHistoryClick}
                 onLogClick={handleLogClick}
                 onExecuteClick={handleExecuteClick}
             />
             <HistoryModal
                 open={historyModalShow}
-                taskName={task.name}
+                taskName={props.task.name}
                 onClose={() => setHistoryModalShow(false)}
             />
             <LogModal
-                // key={`log_${task.time_stamp}`}
                 open={logModalShow}
-                taskName={task.name}
+                taskName={props.task.name}
                 onClose={() => setLogModalShow(false)}
             />
             <ExecuteModal
                 open={executeModalShow}
-                task={task}
+                task={props.task}
                 onClose={() => setExecuteModalShow(false)}
                 onSubmit={handleSubmit}
             />
@@ -185,13 +174,12 @@ const TaskGrid: React.FunctionComponent<TaskGridProps> = (
     const [task, setTask] = React.useState<Task>({} as Task);
     const [taskControlShow, setTaskControlShow] = React.useState(false);
 
+    const history = useHistory();
+
     const handleTaskClick = (task: Task) => {
-        console.log("click");
         setTask(task);
         setTaskControlShow(true);
     };
-
-    const handleTaskControlClose = () => setTaskControlShow(false);
 
     const elements = Object.entries(props.tasks).map(
         ([index, task]): React.ReactNode => {
@@ -215,7 +203,10 @@ const TaskGrid: React.FunctionComponent<TaskGridProps> = (
             <TaskControl
                 task={task}
                 show={taskControlShow}
-                onClose={handleTaskControlClose}
+                onClose={() => setTaskControlShow(false)}
+                onWorkflowClick={() =>
+                    history.push("/workflow", { taskName: task.name })
+                }
             />
         </>
     );
